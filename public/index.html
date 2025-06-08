@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>다하팀의 헬스 케어 분석</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* 기본 스타일 적용 */
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      background-color: #fffdf5;
+      color: #333;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #5a7e49;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 6px;
+      font-weight: bold;
+      color: #5a7e49;
+    }
+
+    input[type="date"],
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      max-width: 500px;
+      padding: 12px 15px;
+      font-size: 15px;
+      border: 2px solid #86ba6a;
+      border-radius: 8px;
+      box-sizing: border-box;
+      background-color: #fff;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input[type="date"]:focus,
+    textarea:focus,
+    input[type="text"]:focus {
+      border-color: #86ba6a;
+      box-shadow: 0 0 0 3px rgba(134, 186, 106, 0.2);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 100px;
+    }
+
+    .button-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .button-container button,
+    .save-button-container button {
+      background-color: #fdd95b;
+      color: #333;
+      font-weight: bold;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .button-container button:hover,
+    .save-button-container button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .save-button-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      max-width: 900px;
+      margin: 20px auto 0 auto;
+      gap: 12px;
+    }
+
+    .save-button-container label {
+      white-space: nowrap;
+      font-weight: 600;
+      color: #5a7e49;
+      font-size: 15px;
+    }
+
+    .save-button-container input[type="text"] {
+      flex: 2;
+      min-width: 300px;
+      padding: 12px 15px;
+      font-size: 15px;
+      border: 2px solid #86ba6a;
+      border-radius: 8px;
+      box-sizing: border-box;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .save-button-container input[type="text"]:focus {
+      border-color: #86ba6a;
+      box-shadow: 0 0 0 3px rgba(134, 186, 106, 0.2);
+      outline: none;
+    }
+
+    .save-button-container button {
+      margin-top: 0;
+      height: 48px;
+      width: 300px;
+    }
+
+    /* 상태 표시 */
+    .status {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    .status.green {
+      color: #28a745;
+    }
+
+    /* 결과 영역 */
+    #result {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #fefce8;
+      border: 2px solid #fdd95b;
+      border-radius: 12px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      color: #333;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<h1>다하팀의 헬스 케어 분석</h1>
+
+<form id="healthcare-form">
+  <label>시작 날짜:</label>
+  <input type="date" name="start" min="2025-04-14" required>
+
+  <label>종료 날짜:</label>
+  <input type="date" name="end" max="" required>
+
+  <label>요청 메세지:</label>
+  <textarea name="prompt">팀원들의 평균 점수가 가장 높은/낮은 날 분석해줘.</textarea>
+
+  <div class="button-container">
+    <button type="submit">분석 요청</button>
+  </div>
+</form>
+
+<p class="status" id="analysis-status"></p>
+
+<!-- Google Docs 저장 제목 + 저장 버튼 -->
+<div class="save-button-container">
+  <label for="title-input">Google Docs 저장 제목:</label>
+  <input type="text" name="title" id="title-input" value="헬스케어 주간 보고서">
+
+  <button id="save-button" disabled>Google Docs에 저장</button>
+</div>
+
+<p class="status" id="save-status"></p>
+
+<!-- 요약 결과 메시지 → 제일 아래 위치 -->
+<div id="result"></div>
+
+<script>
+  const analysisForm = document.getElementById('healthcare-form');
+  const analysisStatus = document.getElementById('analysis-status');
+  const resultDiv = document.getElementById('result');
+  const saveButton = document.getElementById('save-button');
+  const saveStatus = document.getElementById('save-status');
+  const titleInput = document.getElementById('title-input');
+
+  let currentResult = ''; // 저장할 때 사용
+
+  analysisForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const data = {
+      start: form.start.value,
+      end: form.end.value,
+      prompt: form.prompt.value
+    };
+
+    analysisStatus.textContent = '분석 중입니다...';
+    analysisStatus.classList.add('green');
+    resultDiv.textContent = '';
+    saveStatus.textContent = '';
+    saveButton.disabled = true;
+
+    try {
+      const res = await fetch('https://n8n.1000.school/webhook/f69458f2-132a-4617-8fc0-38f7b59a0676', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      currentResult = result.result || '';
+
+      resultDiv.textContent = currentResult;
+      analysisStatus.textContent = '분석 완료!';
+      analysisStatus.classList.add('green');
+      saveButton.disabled = false;
+    } catch (err) {
+      analysisStatus.textContent = '에러 발생: ' + err.message;
+      analysisStatus.classList.remove('green');
+    }
+  });
+
+  saveButton.addEventListener('click', async () => {
+    const form = analysisForm;
+
+    const saveData = {
+      title: titleInput.value,
+      content: currentResult,
+      start: form.start.value,
+      end: form.end.value
+    };
+
+    saveStatus.textContent = '저장 중입니다...';
+    saveStatus.classList.remove('green');
+
+    try {
+      const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(saveData)
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        saveStatus.textContent = '저장이 완료되었습니다!';
+        saveStatus.classList.add('green');
+      } else {
+        saveStatus.textContent = '저장 실패!';
+      }
+    } catch (err) {
+      saveStatus.textContent = '저장 중 에러 발생: ' + err.message;
+    }
+  });
+
+  // 오늘 날짜 구하기 (yyyy-mm-dd 형식)
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const todayStr = `${yyyy}-${mm}-${dd}`;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const startInput = document.querySelector('input[name="start"]');
+    const endInput = document.querySelector('input[name="end"]');
+
+    // 시작 날짜 max 오늘로 설정
+    startInput.setAttribute('max', todayStr);
+
+    // 종료 날짜 max 오늘로 설정
+    endInput.setAttribute('max', todayStr);
+
+    // 종료 날짜 min → 시작 날짜로 동기화
+    endInput.setAttribute('min', startInput.value);
+
+    // 시작 날짜 변경 시 종료 날짜 min 업데이트
+    startInput.addEventListener('change', () => {
+      endInput.setAttribute('min', startInput.value);
+
+      // 종료 날짜가 시작 날짜보다 이전이면 자동 보정
+      if (endInput.value < startInput.value) {
+        endInput.value = startInput.value;
+      }
+    });
+  });
+
+</script>
+
+</body>
+</html>
