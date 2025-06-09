@@ -347,11 +347,23 @@
   <div class="chat-messages" id="chat-messages"></div>
 
   <!-- 날짜 선택 영역 -->
-  <div class="chat-dates">
-    <label>시작:</label>
-    <input type="date" id="chat-start">
-    <label>종료:</label>
-    <input type="date" id="chat-end">
+  <div class="chat-dates" style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-top: 1px solid #ccc; background-color: #fafafa;">
+    <p style="font-weight: bold; color: #5a7e49; margin: 0;">📅 분석할 기간 설정 (Health Care Data)</p>
+
+    <!-- 체크박스: 날짜 안 씀 -->
+    <label style="display: flex; align-items: center; gap: 6px; margin-top: 5px;">
+      <input type="checkbox" id="no-date-checkbox">
+      날짜 선택 안 함
+    </label>
+
+    <!-- 기간 선택 (가로 배치) -->
+    <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+      <span style="font-size: 14px;">기간:</span>
+      <input type="date" id="chat-start">
+      <span style="font-size: 14px;">부터</span>
+      <input type="date" id="chat-end">
+      <span style="font-size: 14px;">까지</span>
+    </div>
   </div>
 
   <!-- 채팅 입력 영역 -->
@@ -369,6 +381,10 @@
   document.getElementById('chat-end').value = today;
   document.getElementById('chat-start').setAttribute('max', today);
   document.getElementById('chat-end').setAttribute('max', today);
+
+  const noDateCheckbox = document.getElementById('no-date-checkbox');
+  const chatStart = document.getElementById('chat-start');
+  const chatEnd = document.getElementById('chat-end');
 
   // 채팅창 접기/펼치기
   const chatBox = document.getElementById('chat-box');
@@ -425,8 +441,8 @@
 
   async function sendChat() {
     const prompt = chatPrompt.value.trim();
-    const start = document.getElementById('chat-start').value;
-    const end = document.getElementById('chat-end').value;
+    const start = noDateCheckbox.checked ? "" : document.getElementById('chat-start').value;
+    const end = noDateCheckbox.checked ? "" : document.getElementById('chat-end').value;
 
     if (!prompt) return;
 
@@ -456,10 +472,8 @@
       gptMessage.textContent = '분석 완료! 결과:\n' + output;
       document.getElementById('save-button').disabled = false;
 
-      saveChatHistory();
     } catch (err) {
       gptMessage.textContent = '에러 발생: ' + err.message;
-      saveChatHistory();
     }
   }
 
@@ -477,20 +491,6 @@
   chatPrompt.addEventListener('input', () => {
     chatPrompt.style.height = '24px';
     chatPrompt.style.height = Math.min(chatPrompt.scrollHeight, 64) + 'px';
-  });
-
-  // 채팅 기록 저장
-  function saveChatHistory() {
-    localStorage.setItem('chatHistory', chatMessages.innerHTML);
-  }
-
-  // 로컬스토리지 불러오기
-  window.addEventListener('load', () => {
-    const savedMessages = localStorage.getItem('chatHistory');
-    if (savedMessages) {
-      chatMessages.innerHTML = savedMessages;
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
   });
 
   // 저장 버튼 클릭
@@ -560,6 +560,27 @@
       document.getElementById('save-status-top').textContent = '저장 중 에러 발생: ' + err.message;
     }
   });
+
+  noDateCheckbox.addEventListener('change', () => {
+    if (noDateCheckbox.checked) {
+      // 날짜 선택 비활성화
+      chatStart.disabled = true;
+      chatEnd.disabled = true;
+
+      // 회색 표시
+      chatStart.style.backgroundColor = '#e0e0e0';
+      chatEnd.style.backgroundColor = '#e0e0e0';
+    } else {
+      // 날짜 선택 가능하게
+      chatStart.disabled = false;
+      chatEnd.disabled = false;
+
+      // 원래 배경으로 복원
+      chatStart.style.backgroundColor = '#ffffff';
+      chatEnd.style.backgroundColor = '#ffffff';
+    }
+  });
+
 </script>
 
 </body>
