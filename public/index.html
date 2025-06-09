@@ -304,12 +304,24 @@
         padding: 8px 16px;
       }
     }
+
+    .floating-chat.collapsed {
+      height: 50px; /* header height만 */
+      overflow: hidden;
+    }
+
+    .floating-chat.collapsed .chat-messages,
+    .floating-chat.collapsed .chat-dates,
+    .floating-chat.collapsed .chat-send {
+      display: none;
+    }
+
   </style>
 </head>
 
 <body>
 <!-- Wrapper 시작 -->
-<div class="wrapper">3
+<div class="wrapper">
 
   <h1>DAHA</h1>
 
@@ -348,21 +360,26 @@
 
   <!-- 날짜 선택 영역 -->
   <div class="chat-dates" style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-top: 1px solid #ccc; background-color: #fafafa;">
-    <p style="font-weight: bold; color: #5a7e49; margin: 0;">📅 분석할 기간 설정 (Health Care Data)</p>
 
-    <!-- 체크박스: 날짜 안 씀 -->
-    <label style="display: flex; align-items: center; gap: 6px; margin-top: 5px;">
-      <input type="checkbox" id="no-date-checkbox">
-      날짜 선택 안 함
-    </label>
+    <div style="display: flex; align-items: center;">
+      <p style="font-weight: bold; color: #5a7e49; margin: 0; display: flex; align-items: center; gap: 4px;">
+        📅 <span>Health Care 분석 기간</span>
+      </p>
+
+      <!-- 체크박스: 날짜 안 씀 -->
+      <label style="margin-left: auto; display: flex; align-items: center; gap: 6px; margin: 0;">
+        <input type="checkbox" id="no-date-checkbox">
+        <span>미지정</span>
+      </label>
+    </div>
 
     <!-- 기간 선택 (가로 배치) -->
-    <div style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-      <span style="font-size: 14px;">기간:</span>
+    <div id="chat-date-range" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+      <span style="font-size: 14px;"></span>
       <input type="date" id="chat-start">
-      <span style="font-size: 14px;">부터</span>
+      <span style="font-size: 14px;">~</span>
       <input type="date" id="chat-end">
-      <span style="font-size: 14px;">까지</span>
+      <span style="font-size: 14px;"></span>
     </div>
   </div>
 
@@ -561,23 +578,40 @@
     }
   });
 
+  const dateRangeDiv = document.getElementById('chat-date-range');
+
   noDateCheckbox.addEventListener('change', () => {
     if (noDateCheckbox.checked) {
-      // 날짜 선택 비활성화
+      chatStart.value = '';
+      chatEnd.value = '';
+
       chatStart.disabled = true;
       chatEnd.disabled = true;
 
-      // 회색 표시
+      chatStart.setAttribute('readonly', true);
+      chatEnd.setAttribute('readonly', true);
+
+      chatStart.style.pointerEvents = 'none';
+      chatEnd.style.pointerEvents = 'none';
+
       chatStart.style.backgroundColor = '#e0e0e0';
       chatEnd.style.backgroundColor = '#e0e0e0';
+
+      dateRangeDiv.style.opacity = '0.5';
     } else {
-      // 날짜 선택 가능하게
       chatStart.disabled = false;
       chatEnd.disabled = false;
 
-      // 원래 배경으로 복원
+      chatStart.removeAttribute('readonly');
+      chatEnd.removeAttribute('readonly');
+
+      chatStart.style.pointerEvents = 'auto';
+      chatEnd.style.pointerEvents = 'auto';
+
       chatStart.style.backgroundColor = '#ffffff';
       chatEnd.style.backgroundColor = '#ffffff';
+      
+      dateRangeDiv.style.opacity = '1';
     }
   });
 
