@@ -2,237 +2,506 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>다하팀의 헬스 케어 분석</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>다하팀 GPT 분석</title>
+
   <style>
-    /* 기본 스타일 적용 */
-    body {
-      font-family: 'Arial', sans-serif;
-      line-height: 1.6;
-      background-color: #fffdf5;
-      color: #333;
-      padding: 20px;
+    /* Global Design Tokens */
+    :root {
+      --color-primary: #1a4b84;
+      --color-primary-dark: #163b6b;
+      --color-accent: #38bdf8;
+      --color-background: #f9fafc;
+      --color-surface: #ffffff;
+      --color-border: #e0e6ed;
+      --color-text-primary: #1f2937;
+      --color-text-secondary: #4b5563;
+      --color-disabled: #cfd8e3;
     }
 
-    h1 {
-      font-size: 2rem;
-      color: #5a7e49;
-      text-align: center;
-      margin-bottom: 30px;
+    body {
+      font-family: 'Roboto', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--color-background);
+      padding: 40px;
+      color: var(--color-text-primary);
+      line-height: 1.6;
+    }
+
+    .wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      background-color: var(--color-surface);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 767px) {
+      .wrapper {
+        padding: 24px 16px;
+      }
+    }
+
+    .save-button-container {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 16px 24px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      max-width: 800px;
+      margin: 0 auto 24px auto;
     }
 
     label {
-      display: block;
-      margin: 12px 0 6px;
-      font-weight: bold;
-      color: #5a7e49;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text-primary);
     }
 
-    input[type="date"],
-    textarea,
-    input[type="text"] {
-      width: 100%;
-      max-width: 500px;
+    .save-button-container input[type="text"] {
+      flex: 1;
       padding: 12px 15px;
       font-size: 15px;
-      border: 2px solid #86ba6a;
+      border: 1px solid #d0d7de;
       border-radius: 8px;
       box-sizing: border-box;
-      background-color: #fff;
       transition: border-color 0.3s, box-shadow 0.3s;
     }
 
-    input[type="date"]:focus,
-    textarea:focus,
-    input[type="text"]:focus {
-      border-color: #86ba6a;
-      box-shadow: 0 0 0 3px rgba(134, 186, 106, 0.2);
-      outline: none;
+    #result {
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--color-text-primary);
+      margin: 0 auto 24px auto;
+      display: block;
+      white-space: pre-wrap;
     }
 
-    textarea {
-      min-height: 100px;
+    #save-button {
+      background-color: var(--color-primary);
+      color: var(--color-surface);
+      font-weight: 600;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.1s;
     }
 
-    .button-container {
-      text-align: center;
-      margin-top: 20px;
+    #save-button:hover {
+      background-color: var(--color-primary-dark);
     }
 
-    .button-container button,
-    .save-button-container button {
+    #save-button:disabled {
+      background-color: var(--color-disabled);
+      cursor: not-allowed;
+    }
+
+    /* 버튼 기본 스타일 - 둥글게 유지 */
+    #save-button-top {
       background-color: #fdd95b;
       color: #333;
-      font-weight: bold;
-      padding: 12px 24px;
-      font-size: 16px;
-      border: none;
+      border: none; /* 네모 박스 없앰 */
       border-radius: 9999px;
+      padding: 8px 16px;
+      font-weight: bold;
+      font-size: 15px;
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .button-container button:hover,
-    .save-button-container button:hover {
+    #save-button-top:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
     }
 
-    .save-button-container {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      max-width: 900px;
-      margin: 20px auto 0 auto;
-      gap: 12px;
-    }
-
-    .save-button-container label {
-      white-space: nowrap;
-      font-weight: 600;
-      color: #5a7e49;
-      font-size: 15px;
-    }
-
-    .save-button-container input[type="text"] {
-      flex: 2;
-      min-width: 300px;
-      padding: 12px 15px;
-      font-size: 15px;
-      border: 2px solid #86ba6a;
-      border-radius: 8px;
-      box-sizing: border-box;
-      transition: border-color 0.3s, box-shadow 0.3s;
-    }
-
-    .save-button-container input[type="text"]:focus {
-      border-color: #86ba6a;
-      box-shadow: 0 0 0 3px rgba(134, 186, 106, 0.2);
-      outline: none;
-    }
-
-    .save-button-container button {
-      margin-top: 0;
-      height: 48px;
-      width: 300px;
-    }
-
-    /* 상태 표시 */
     .status {
       text-align: center;
-      margin-top: 15px;
+      font-size: 15px;
       font-weight: bold;
+      margin-top: 16px;
+      color: var(--color-primary);
     }
 
-    .status.green {
-      color: #28a745;
+    @media (max-width: 767px) {
+      .save-button-container {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 16px;
+      }
+
+      .save-button-container input[type="text"] {
+        width: 100%;
+        margin-bottom: 12px;
+      }
+
+      #result {
+        width: 100%;
+        font-size: 14px;
+        padding: 16px;
+      }
+
+      #save-button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+      }
     }
 
-    /* 결과 영역 */
-    #result {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #fefce8;
-      border: 2px solid #fdd95b;
+    .floating-chat {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      width: 380px;
+      height: 600px;
+      background-color: var(--color-surface);
+      border: 1px solid var(--color-border);
       border-radius: 12px;
-      max-width: 900px;
-      margin-left: auto;
-      margin-right: auto;
-      color: #333;
-      white-space: pre-wrap;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    .chat-header {
+      background-color: var(--color-primary);
+      color: var(--color-surface);
+      padding: 12px;
+      font-weight: bold;
+      text-align: center;
+      cursor: move;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      position: relative;
+    }
+
+    .chat-header button {
+      background: var(--color-surface);
+      border: none;
+      border-radius: 9999px;
+      padding: 4px 10px;
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .chat-messages {
+      flex: 1;
+      background-color: var(--color-background);
+      padding: 10px;
+      overflow-y: auto;
+    }
+
+    .chat-message.user {
+      align-self: flex-end;
+      background-color: var(--color-accent);
+      color: var(--color-surface);
+      padding: 10px 14px;
+      border-radius: 18px;
+      border-bottom-right-radius: 4px;
+      max-width: 80%;
+      margin-bottom: 8px;
+    }
+
+    .chat-message.gpt {
+      align-self: flex-start;
+      background-color: #f0f4f8;
+      color: var(--color-text-primary);
+      padding: 10px 14px;
+      border-radius: 18px;
+      border-bottom-left-radius: 4px;
+      max-width: 80%;
+      margin-bottom: 8px;
+    }
+
+    .chat-dates,
+    .chat-send {
+      background-color: var(--color-background);
+      border-top: 1px solid var(--color-border);
+      padding: 8px;
+      display: flex;
+      align-items: center;
+    }
+
+    .chat-dates {
+      justify-content: space-between;
+    }
+
+    .chat-dates input {
+      width: 45%;
+      padding: 6px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+    }
+
+    .chat-send {
+      gap: 8px;
+    }
+
+    .chat-send textarea {
+      flex: 1;
+      resize: none;
+      height: 32px;
+      max-height: 64px;
+      padding: 8px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      background: var(--color-surface);
+      font-size: 14px;
+    }
+
+    .chat-send button {
+      background-color: var(--color-primary);
+      color: var(--color-surface);
+      border: none;
+      border-radius: 9999px;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .chat-send button:hover {
+      background-color: var(--color-primary-dark);
+    }
+
+    @media (max-width: 767px) {
+      .floating-chat {
+        width: 100%;
+        right: 0;
+        bottom: 0;
+        height: 400px;
+        border-radius: 12px 12px 0 0;
+        border-left: none;
+        border-right: none;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      .chat-header {
+        padding: 12px;
+        font-size: 16px;
+      }
+
+      .chat-send textarea {
+        height: 32px;
+        max-height: 64px;
+      }
+
+      .chat-send button {
+        padding: 8px 16px;
+      }
     }
   </style>
 </head>
+
 <body>
+<!-- Wrapper 시작 -->
+<div class="wrapper">3
 
-<h1>다하팀의 헬스 케어 분석</h1>
+  <h1>DAHA</h1>
 
-<form id="healthcare-form">
-  <label>시작 날짜:</label>
-  <input type="date" name="start" min="2025-04-14" required>
-
-  <label>종료 날짜:</label>
-  <input type="date" name="end" max="" required>
-
-  <label>요청 메세지:</label>
-  <textarea name="prompt">팀원들의 평균 점수가 가장 높은/낮은 날 분석해줘.</textarea>
-
-  <div class="button-container">
-    <button type="submit">분석 요청</button>
+  <!-- Google Cloud 저장 제목 -->
+  <div class="save-button-container">
+    <label for="title-input">Google Cloud 저장 제목:</label>
+    <input type="text" id="title-input" value="GPT 분석 결과">
   </div>
-</form>
 
-<p class="status" id="analysis-status"></p>
+  <!-- GPT 결과 영역 -->
+  <label style="margin-top: 20px;">본문:</label>
+  <textarea id="result" contenteditable="true"
+            style="min-height: 400px; max-width: 900px; width: 100%; box-sizing: border-box;"></textarea>
 
-<!-- Google Docs 저장 제목 + 저장 버튼 -->
-<div class="save-button-container">
-  <label for="title-input">Google Docs 저장 제목:</label>
-  <input type="text" name="title" id="title-input" value="헬스케어 주간 보고서">
+  <!-- 상태 표시 -->
+  <p class="status" id="save-status"></p>
 
-  <button id="save-button" disabled>Google Docs에 저장</button>
+  <!-- 저장 버튼 -->
+  <div class="">
+    <button id="save-button" disabled>Google Cloud에 저장</button>
+    <span id="save-status-top" class="status"></span>
+  </div>
+
+</div>
+<!-- Wrapper 끝 -->
+
+<!-- Floating Chat -->
+<div class="floating-chat" id="chat-box">
+  <div class="chat-header" id="chat-header">
+    GPT 채팅
+    <button id="toggle-chat">접기</button>
+  </div>
+
+  <!-- 채팅 메시지 영역 -->
+  <div class="chat-messages" id="chat-messages"></div>
+
+  <!-- 날짜 선택 영역 -->
+  <div class="chat-dates">
+    <label>시작:</label>
+    <input type="date" id="chat-start">
+    <label>종료:</label>
+    <input type="date" id="chat-end">
+  </div>
+
+  <!-- 채팅 입력 영역 -->
+  <div class="chat-send">
+    <textarea id="chat-prompt" placeholder="프롬프트 입력..." rows="1"></textarea>
+    <button id="chat-submit">보내기</button>
+  </div>
 </div>
 
-<p class="status" id="save-status"></p>
-
-<!-- 요약 결과 메시지 → 제일 아래 위치 -->
-<div id="result"></div>
-
+<!-- JavaScript -->
 <script>
-  const analysisForm = document.getElementById('healthcare-form');
-  const analysisStatus = document.getElementById('analysis-status');
-  const resultDiv = document.getElementById('result');
-  const saveButton = document.getElementById('save-button');
-  const saveStatus = document.getElementById('save-status');
-  const titleInput = document.getElementById('title-input');
+  // 오늘 날짜 기본 설정
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('chat-start').value = today;
+  document.getElementById('chat-end').value = today;
+  document.getElementById('chat-start').setAttribute('max', today);
+  document.getElementById('chat-end').setAttribute('max', today);
 
-  let currentResult = ''; // 저장할 때 사용
+  // 채팅창 접기/펼치기
+  const chatBox = document.getElementById('chat-box');
+  const toggleChatBtn = document.getElementById('toggle-chat');
+  toggleChatBtn.addEventListener('click', () => {
+    if (chatBox.classList.contains('collapsed')) {
+      chatBox.style.height = '600px';
+      chatBox.classList.remove('collapsed');
+      toggleChatBtn.textContent = '접기';
+    } else {
+      chatBox.style.height = '40px';
+      chatBox.classList.add('collapsed');
+      toggleChatBtn.textContent = '펼치기';
+    }
+  });
 
-  analysisForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  // 드래그 이동 기능
+  const chatHeader = document.getElementById('chat-header');
+  let isDragging = false, offsetX, offsetY;
+  chatHeader.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    offsetX = e.clientX - chatBox.offsetLeft;
+    offsetY = e.clientY - chatBox.offsetTop;
+    document.body.style.userSelect = 'none';
+  });
 
-    const form = e.target;
-    const data = {
-      start: form.start.value,
-      end: form.end.value,
-      prompt: form.prompt.value
-    };
+  document.addEventListener('mousemove', (e) => {
+    if (isDragging) {
+      chatBox.style.left = (e.clientX - offsetX) + 'px';
+      chatBox.style.top = (e.clientY - offsetY) + 'px';
+    }
+  });
 
-    analysisStatus.textContent = '분석 중입니다...';
-    analysisStatus.classList.add('green');
-    resultDiv.textContent = '';
-    saveStatus.textContent = '';
-    saveButton.disabled = true;
+  document.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.style.userSelect = '';
+  });
+
+  // 채팅 전송
+  const chatSubmit = document.getElementById('chat-submit');
+  const chatMessages = document.getElementById('chat-messages');
+  const chatPrompt = document.getElementById('chat-prompt');
+
+  chatSubmit.addEventListener('click', async () => {
+    await sendChat();
+  });
+
+  chatPrompt.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat();
+    }
+  });
+
+  async function sendChat() {
+    const prompt = chatPrompt.value.trim();
+    const start = document.getElementById('chat-start').value;
+    const end = document.getElementById('chat-end').value;
+
+    if (!prompt) return;
+
+    addChatMessage(`(${start} ~ ${end}) ${prompt}`, 'user');
+
+    chatPrompt.value = '';
+    chatPrompt.style.height = '24px';
+
+    const gptMessage = addChatMessage('분석 중입니다... ', 'gpt');
+    const spinner = document.createElement('span');
+    spinner.classList.add('spinner');
+    gptMessage.appendChild(spinner);
 
     try {
       const res = await fetch('https://n8n.1000.school/webhook/f69458f2-132a-4617-8fc0-38f7b59a0676', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify({ start, end, prompt })
       });
 
       const result = await res.json();
-      currentResult = result.result || '';
+      const output = result.result || '';
 
-      resultDiv.textContent = currentResult;
-      analysisStatus.textContent = '분석 완료!';
-      analysisStatus.classList.add('green');
-      saveButton.disabled = false;
+      document.getElementById('result').value = output;
+      document.getElementById('result').textContent = output;
+
+      gptMessage.textContent = '분석 완료! 결과:\n' + output;
+      document.getElementById('save-button').disabled = false;
+
+      saveChatHistory();
     } catch (err) {
-      analysisStatus.textContent = '에러 발생: ' + err.message;
-      analysisStatus.classList.remove('green');
+      gptMessage.textContent = '에러 발생: ' + err.message;
+      saveChatHistory();
+    }
+  }
+
+  // 채팅 메시지 추가
+  function addChatMessage(text, type) {
+    const message = document.createElement('div');
+    message.classList.add('chat-message', type);
+    message.textContent = text;
+    chatMessages.appendChild(message);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return message;
+  }
+
+  // 채팅 입력 자동 높이 조절
+  chatPrompt.addEventListener('input', () => {
+    chatPrompt.style.height = '24px';
+    chatPrompt.style.height = Math.min(chatPrompt.scrollHeight, 64) + 'px';
+  });
+
+  // 채팅 기록 저장
+  function saveChatHistory() {
+    localStorage.setItem('chatHistory', chatMessages.innerHTML);
+  }
+
+  // 로컬스토리지 불러오기
+  window.addEventListener('load', () => {
+    const savedMessages = localStorage.getItem('chatHistory');
+    if (savedMessages) {
+      chatMessages.innerHTML = savedMessages;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
   });
 
-  saveButton.addEventListener('click', async () => {
-    const form = analysisForm;
+  // 저장 버튼 클릭
+  const saveButton = document.getElementById('save-button');
+  const saveStatus = document.getElementById('save-status');
+  const titleInput = document.getElementById('title-input');
+  const resultTextarea = document.getElementById('result');
 
-    const saveData = {
-      title: titleInput.value,
-      content: currentResult,
-      start: form.start.value,
-      end: form.end.value
-    };
+  saveButton.addEventListener('click', async () => {
+    const title = titleInput.value;
+    const content = resultTextarea.value;
 
     saveStatus.textContent = '저장 중입니다...';
     saveStatus.classList.remove('green');
@@ -241,7 +510,7 @@
       const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(saveData)
+        body: JSON.stringify({ title, content })
       });
 
       const result = await res.json();
@@ -257,37 +526,40 @@
     }
   });
 
-  // 오늘 날짜 구하기 (yyyy-mm-dd 형식)
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const todayStr = `${yyyy}-${mm}-${dd}`;
+  // 저장 버튼 클릭 시 → GPT 결과 초기화
+  document.getElementById('save-button-top').addEventListener('click', async () => {
+    const title = titleInput.value;
+    const content = resultTextarea.value;
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const startInput = document.querySelector('input[name="start"]');
-    const endInput = document.querySelector('input[name="end"]');
+    document.getElementById('save-status-top').textContent = '저장 중입니다...';
+    document.getElementById('save-status-top').classList.remove('green');
 
-    // 시작 날짜 max 오늘로 설정
-    startInput.setAttribute('max', todayStr);
+    try {
+      const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content })
+      });
 
-    // 종료 날짜 max 오늘로 설정
-    endInput.setAttribute('max', todayStr);
+      const result = await res.json();
 
-    // 종료 날짜 min → 시작 날짜로 동기화
-    endInput.setAttribute('min', startInput.value);
+      if (result.success) {
+        document.getElementById('save-status-top').textContent = '저장이 완료되었습니다!';
+        document.getElementById('save-status-top').classList.add('green');
 
-    // 시작 날짜 변경 시 종료 날짜 min 업데이트
-    startInput.addEventListener('change', () => {
-      endInput.setAttribute('min', startInput.value);
+        // ✅ 결과 초기화
+        resultTextarea.value = '';
+        resultTextarea.textContent = '';
 
-      // 종료 날짜가 시작 날짜보다 이전이면 자동 보정
-      if (endInput.value < startInput.value) {
-        endInput.value = startInput.value;
+        // ✅ 저장 버튼 비활성화 (선택사항)
+        saveButton.disabled = true;
+      } else {
+        document.getElementById('save-status-top').textContent = '저장 실패!';
       }
-    });
+    } catch (err) {
+      document.getElementById('save-status-top').textContent = '저장 중 에러 발생: ' + err.message;
+    }
   });
-
 </script>
 
 </body>
