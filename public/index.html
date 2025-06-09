@@ -228,6 +228,12 @@
       margin-bottom: 8px;
     }
 
+    .chat-date-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
     .chat-dates,
     .chat-send {
       background-color: var(--color-background);
@@ -361,25 +367,25 @@
   <!-- 날짜 선택 영역 -->
   <div class="chat-dates" style="display: flex; flex-direction: column; gap: 6px; padding: 10px; border-top: 1px solid #ccc; background-color: #fafafa;">
 
-    <div style="display: flex; align-items: center;">
-      <p style="font-weight: bold; color: #5a7e49; margin: 0; display: flex; align-items: center; gap: 4px;">
-        📅 <span>Health Care 분석 기간</span>
-      </p>
-
-      <!-- 체크박스: 날짜 안 씀 -->
-      <label style="margin-left: auto; display: flex; align-items: center; gap: 6px; margin: 0;">
+    <!-- 수정 -->
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="font-weight: bold; color: #5a7e49; display: flex; align-items: center; gap: 4px;">
+        📅 <span>가져올 Health Care 데이터</span>
+      </div>
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 14px; margin: 0;">
         <input type="checkbox" id="no-date-checkbox">
-        <span>미지정</span>
+        <span>OFF</span>
       </label>
     </div>
 
-    <!-- 기간 선택 (가로 배치) -->
+
+
+
+    <!-- 날짜 입력 영역 -->
     <div id="chat-date-range" style="display: flex; align-items: center; gap: 8px; margin-top: 6px;">
-      <span style="font-size: 14px;"></span>
       <input type="date" id="chat-start">
       <span style="font-size: 14px;">~</span>
       <input type="date" id="chat-end">
-      <span style="font-size: 14px;"></span>
     </div>
   </div>
 
