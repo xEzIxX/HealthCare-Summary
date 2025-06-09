@@ -594,6 +594,18 @@
       });
     }
   });
+
+    document.addEventListener('DOMContentLoaded', () => {
+    const resultTextarea = document.getElementById('result');
+    const saveButton = document.getElementById('save-button');
+
+    // 본문 내용 입력 시 저장 버튼 활성화
+    resultTextarea.addEventListener('input', () => {
+    const hasContent = resultTextarea.value.trim().length > 0;
+    saveButton.disabled = !hasContent;
+      });
+    });
+
 </script>
 </body>
 </html>
