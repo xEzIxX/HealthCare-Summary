@@ -392,230 +392,208 @@
 
 <!-- JavaScript -->
 <script>
-  // 오늘 날짜 기본 설정
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('chat-start').value = today;
-  document.getElementById('chat-end').value = today;
-  document.getElementById('chat-start').setAttribute('max', today);
-  document.getElementById('chat-end').setAttribute('max', today);
+  document.addEventListener('DOMContentLoaded', () => {
+    // 요소 참조
+    const noDateCheckbox = document.getElementById('no-date-checkbox');
+    const chatStart = document.getElementById('chat-start');
+    const chatEnd = document.getElementById('chat-end');
+    const dateRangeDiv = document.getElementById('chat-date-range');
+    const chatBox = document.getElementById('chat-box');
+    const toggleChatBtn = document.getElementById('toggle-chat');
+    const chatHeader = document.getElementById('chat-header');
+    const chatSubmit = document.getElementById('chat-submit');
+    const chatMessages = document.getElementById('chat-messages');
+    const chatPrompt = document.getElementById('chat-prompt');
+    const saveButton = document.getElementById('save-button');
+    const saveStatus = document.getElementById('save-status');
+    const titleInput = document.getElementById('title-input');
+    const resultTextarea = document.getElementById('result');
 
-  const noDateCheckbox = document.getElementById('no-date-checkbox');
-  const chatStart = document.getElementById('chat-start');
-  const chatEnd = document.getElementById('chat-end');
+    // 오늘 날짜 기본 세팅
+    const today = new Date().toISOString().split('T')[0];
+    chatStart.value = today;
+    chatEnd.value = today;
+    chatStart.setAttribute('max', today);
+    chatEnd.setAttribute('max', today);
 
-  // 채팅창 접기/펼치기
-  const chatBox = document.getElementById('chat-box');
-  const toggleChatBtn = document.getElementById('toggle-chat');
-  toggleChatBtn.addEventListener('click', () => {
-    if (chatBox.classList.contains('collapsed')) {
-      chatBox.style.height = '600px';
-      chatBox.classList.remove('collapsed');
-      toggleChatBtn.textContent = '접기';
-    } else {
-      chatBox.style.height = '40px';
-      chatBox.classList.add('collapsed');
-      toggleChatBtn.textContent = '펼치기';
-    }
-  });
-
-  // 드래그 이동 기능
-  const chatHeader = document.getElementById('chat-header');
-  let isDragging = false, offsetX, offsetY;
-  chatHeader.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    offsetX = e.clientX - chatBox.offsetLeft;
-    offsetY = e.clientY - chatBox.offsetTop;
-    document.body.style.userSelect = 'none';
-  });
-
-  document.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-      chatBox.style.left = (e.clientX - offsetX) + 'px';
-      chatBox.style.top = (e.clientY - offsetY) + 'px';
-    }
-  });
-
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-    document.body.style.userSelect = '';
-  });
-
-  // 채팅 전송
-  const chatSubmit = document.getElementById('chat-submit');
-  const chatMessages = document.getElementById('chat-messages');
-  const chatPrompt = document.getElementById('chat-prompt');
-
-  chatSubmit.addEventListener('click', async () => {
-    await sendChat();
-  });
-
-  chatPrompt.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendChat();
-    }
-  });
-
-  async function sendChat() {
-    const prompt = chatPrompt.value.trim();
-    const start = noDateCheckbox.checked ? "" : document.getElementById('chat-start').value;
-    const end = noDateCheckbox.checked ? "" : document.getElementById('chat-end').value;
-
-    if (!prompt) return;
-
-    addChatMessage(`(${start} ~ ${end}) ${prompt}`, 'user');
-
-    chatPrompt.value = '';
-    chatPrompt.style.height = '24px';
-
-    const gptMessage = addChatMessage('분석 중입니다... ', 'gpt');
-    const spinner = document.createElement('span');
-    spinner.classList.add('spinner');
-    gptMessage.appendChild(spinner);
-
-    try {
-      const res = await fetch('https://n8n.1000.school/webhook/f69458f2-132a-4617-8fc0-38f7b59a0676', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ start, end, prompt })
-      });
-
-      const result = await res.json();
-      const output = result.result || '';
-
-      document.getElementById('result').value = output;
-      document.getElementById('result').textContent = output;
-
-      gptMessage.textContent = '분석 완료! 결과:\n' + output;
-      document.getElementById('save-button').disabled = false;
-
-    } catch (err) {
-      gptMessage.textContent = '에러 발생: ' + err.message;
-    }
-  }
-
-  // 채팅 메시지 추가
-  function addChatMessage(text, type) {
-    const message = document.createElement('div');
-    message.classList.add('chat-message', type);
-    message.textContent = text;
-    chatMessages.appendChild(message);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    return message;
-  }
-
-  // 채팅 입력 자동 높이 조절
-  chatPrompt.addEventListener('input', () => {
-    chatPrompt.style.height = '24px';
-    chatPrompt.style.height = Math.min(chatPrompt.scrollHeight, 64) + 'px';
-  });
-
-  // 저장 버튼 클릭
-  const saveButton = document.getElementById('save-button');
-  const saveStatus = document.getElementById('save-status');
-  const titleInput = document.getElementById('title-input');
-  const resultTextarea = document.getElementById('result');
-
-  saveButton.addEventListener('click', async () => {
-    const title = titleInput.value;
-    const content = resultTextarea.value;
-
-    saveStatus.textContent = '저장 중입니다...';
-    saveStatus.classList.remove('green');
-
-    try {
-      const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
-      });
-
-      const result = await res.json();
-
-      if (result.success) {
-        saveStatus.textContent = '저장이 완료되었습니다!';
-        saveStatus.classList.add('green');
+    // "미지정" 체크박스 → 날짜 필드 비활성화
+    noDateCheckbox.addEventListener('change', () => {
+      if (noDateCheckbox.checked) {
+        chatStart.value = '';
+        chatEnd.value = '';
+        chatStart.disabled = true;
+        chatEnd.disabled = true;
+        chatStart.style.pointerEvents = 'none';
+        chatEnd.style.pointerEvents = 'none';
+        chatStart.style.backgroundColor = '#e0e0e0';
+        chatEnd.style.backgroundColor = '#e0e0e0';
+        dateRangeDiv.style.opacity = '0.5';
       } else {
-        saveStatus.textContent = '저장 실패!';
+        chatStart.disabled = false;
+        chatEnd.disabled = false;
+        chatStart.style.pointerEvents = 'auto';
+        chatEnd.style.pointerEvents = 'auto';
+        chatStart.style.backgroundColor = '#ffffff';
+        chatEnd.style.backgroundColor = '#ffffff';
+        chatStart.value = today;
+        chatEnd.value = today;
+        dateRangeDiv.style.opacity = '1';
       }
-    } catch (err) {
-      saveStatus.textContent = '저장 중 에러 발생: ' + err.message;
-    }
-  });
+    });
 
-  // 저장 버튼 클릭 시 → GPT 결과 초기화
-  document.getElementById('save-button-top').addEventListener('click', async () => {
-    const title = titleInput.value;
-    const content = resultTextarea.value;
-
-    document.getElementById('save-status-top').textContent = '저장 중입니다...';
-    document.getElementById('save-status-top').classList.remove('green');
-
-    try {
-      const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
-      });
-
-      const result = await res.json();
-
-      if (result.success) {
-        document.getElementById('save-status-top').textContent = '저장이 완료되었습니다!';
-        document.getElementById('save-status-top').classList.add('green');
-
-        // ✅ 결과 초기화
-        resultTextarea.value = '';
-        resultTextarea.textContent = '';
-
-        // ✅ 저장 버튼 비활성화 (선택사항)
-        saveButton.disabled = true;
+    // 채팅창 접기/펼치기
+    toggleChatBtn.addEventListener('click', () => {
+      if (chatBox.classList.contains('collapsed')) {
+        chatBox.classList.remove('collapsed');
+        chatBox.style.height = '600px';
+        toggleChatBtn.textContent = '접기';
       } else {
-        document.getElementById('save-status-top').textContent = '저장 실패!';
+        chatBox.classList.add('collapsed');
+        chatBox.style.height = '40px';
+        toggleChatBtn.textContent = '펼치기';
       }
-    } catch (err) {
-      document.getElementById('save-status-top').textContent = '저장 중 에러 발생: ' + err.message;
+    });
+
+    // 채팅창 이동 (드래그)
+    let isDragging = false, offsetX, offsetY;
+    chatHeader.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      offsetX = e.clientX - chatBox.offsetLeft;
+      offsetY = e.clientY - chatBox.offsetTop;
+      document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        chatBox.style.left = (e.clientX - offsetX) + 'px';
+        chatBox.style.top = (e.clientY - offsetY) + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      document.body.style.userSelect = '';
+    });
+
+    // 채팅 전송
+    chatSubmit.addEventListener('click', async () => {
+      await sendChat();
+    });
+
+    chatPrompt.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+      }
+    });
+
+    chatPrompt.addEventListener('input', () => {
+      chatPrompt.style.height = '24px';
+      chatPrompt.style.height = Math.min(chatPrompt.scrollHeight, 64) + 'px';
+    });
+
+    async function sendChat() {
+      const prompt = chatPrompt.value.trim();
+      const start = noDateCheckbox.checked ? "" : chatStart.value;
+      const end = noDateCheckbox.checked ? "" : chatEnd.value;
+
+      if (!prompt) return;
+
+      addChatMessage(`(${start} ~ ${end}) ${prompt}`, 'user');
+      chatPrompt.value = '';
+      chatPrompt.style.height = '24px';
+
+      const gptMessage = addChatMessage('분석 중입니다... ', 'gpt');
+      const spinner = document.createElement('span');
+      spinner.classList.add('spinner');
+      gptMessage.appendChild(spinner);
+
+      try {
+        const res = await fetch('https://n8n.1000.school/webhook/f69458f2-132a-4617-8fc0-38f7b59a0676', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ start, end, prompt })
+        });
+
+        const result = await res.json();
+        const output = result.result || '';
+
+        resultTextarea.value = output;
+        resultTextarea.textContent = output;
+
+        gptMessage.textContent = '분석 완료! 결과:\n' + output;
+        saveButton.disabled = false;
+      } catch (err) {
+        gptMessage.textContent = '에러 발생: ' + err.message;
+      }
+    }
+
+    function addChatMessage(text, type) {
+      const message = document.createElement('div');
+      message.classList.add('chat-message', type);
+      message.textContent = text;
+      chatMessages.appendChild(message);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      return message;
+    }
+
+    // 저장 버튼 처리
+    saveButton.addEventListener('click', async () => {
+      const title = titleInput.value;
+      const content = resultTextarea.value;
+
+      saveStatus.textContent = '저장 중입니다...';
+      saveStatus.classList.remove('green');
+
+      try {
+        const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, content })
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          saveStatus.textContent = '저장이 완료되었습니다!';
+          saveStatus.classList.add('green');
+        } else {
+          saveStatus.textContent = '저장 실패!';
+        }
+      } catch (err) {
+        saveStatus.textContent = '저장 중 에러 발생: ' + err.message;
+      }
+    });
+
+    // 상단 저장 버튼
+    const saveTopBtn = document.getElementById('save-button-top');
+    if (saveTopBtn) {
+      saveTopBtn.addEventListener('click', async () => {
+        const title = titleInput.value;
+        const content = resultTextarea.value;
+
+        document.getElementById('save-status-top').textContent = '저장 중입니다...';
+        try {
+          const res = await fetch('https://n8n.1000.school/webhook/913527c4-3de9-4b7d-b39a-e789be9a0ab8', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, content })
+          });
+
+          const result = await res.json();
+          if (result.success) {
+            document.getElementById('save-status-top').textContent = '저장이 완료되었습니다!';
+            resultTextarea.value = '';
+            resultTextarea.textContent = '';
+            saveButton.disabled = true;
+          } else {
+            document.getElementById('save-status-top').textContent = '저장 실패!';
+          }
+        } catch (err) {
+          document.getElementById('save-status-top').textContent = '저장 중 에러 발생: ' + err.message;
+        }
+      });
     }
   });
-
-  const dateRangeDiv = document.getElementById('chat-date-range');
-
-  noDateCheckbox.addEventListener('change', () => {
-    if (noDateCheckbox.checked) {
-      chatStart.value = '';
-      chatEnd.value = '';
-
-      chatStart.disabled = true;
-      chatEnd.disabled = true;
-
-      chatStart.setAttribute('readonly', true);
-      chatEnd.setAttribute('readonly', true);
-
-      chatStart.style.pointerEvents = 'none';
-      chatEnd.style.pointerEvents = 'none';
-
-      chatStart.style.backgroundColor = '#e0e0e0';
-      chatEnd.style.backgroundColor = '#e0e0e0';
-
-      dateRangeDiv.style.opacity = '0.5';
-    } else {
-      chatStart.disabled = false;
-      chatEnd.disabled = false;
-
-      chatStart.removeAttribute('readonly');
-      chatEnd.removeAttribute('readonly');
-
-      chatStart.style.pointerEvents = 'auto';
-      chatEnd.style.pointerEvents = 'auto';
-
-      chatStart.style.backgroundColor = '#ffffff';
-      chatEnd.style.backgroundColor = '#ffffff';
-      
-      dateRangeDiv.style.opacity = '1';
-    }
-  });
-
 </script>
-
 </body>
 </html>
