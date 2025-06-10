@@ -415,6 +415,12 @@
     const titleInput = document.getElementById('title-input');
     const resultTextarea = document.getElementById('result');
 
+    // 이미 있는 DOMContentLoaded 안에 추가:
+    resultTextarea.addEventListener('input', () => {
+      const hasContent = resultTextarea.value.trim().length > 0;
+      saveButton.disabled = !hasContent;
+    });
+
     // 오늘 날짜 기본 세팅
     const today = new Date().toISOString().split('T')[0];
     chatStart.value = today;
@@ -498,7 +504,12 @@
       chatPrompt.style.height = Math.min(chatPrompt.scrollHeight, 64) + 'px';
     });
 
+    let isSending = false;
+
     async function sendChat() {
+      if (isSending) return;
+      isSending = true;
+
       const prompt = chatPrompt.value.trim();
       const start = noDateCheckbox.checked ? "" : chatStart.value;
       const end = noDateCheckbox.checked ? "" : chatEnd.value;
@@ -524,13 +535,29 @@
         const result = await res.json();
         const output = result.result || '';
 
-        resultTextarea.value = output;
-        resultTextarea.textContent = output;
+        // 1) 제목: … (한 줄)
+        const titleMatch = output.match(/제목\s*:\s*([^\n\r]+)/);
+        const titleText = titleMatch ? titleMatch[1].trim() : '';
 
-        gptMessage.textContent = '분석 완료! 결과:\n' + output;
+        // 2) 내용: … (제목 다음 줄부터 끝까지)
+        const contentMatch = output.match(/내용\s*:\s*([\s\S]*)/);
+        const contentText = contentMatch ? contentMatch[1].trim() : '';
+
+        // 3) 각 필드에 할당
+        titleInput.value       = titleText;
+        resultTextarea.value   = contentText;
+        resultTextarea.textContent = contentText;
+
+        // GPT 채팅창에도 알림
+        gptMessage.textContent = '분석 완료! \n\n' + contentText;
+
+        saveButton.disabled = !contentText;
+
         saveButton.disabled = false;
       } catch (err) {
         gptMessage.textContent = '에러 발생: ' + err.message;
+      } finally {
+        isSending = false;
       }
     }
 
@@ -600,18 +627,6 @@
       });
     }
   });
-
-    document.addEventListener('DOMContentLoaded', () => {
-    const resultTextarea = document.getElementById('result');
-    const saveButton = document.getElementById('save-button');
-
-    // 본문 내용 입력 시 저장 버튼 활성화
-    resultTextarea.addEventListener('input', () => {
-    const hasContent = resultTextarea.value.trim().length > 0;
-    saveButton.disabled = !hasContent;
-      });
-    });
-
 </script>
 </body>
 </html>
