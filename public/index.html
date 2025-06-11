@@ -334,7 +334,7 @@
   <!-- Google Cloud 저장 제목 -->
   <div class="save-button-container">
     <label for="title-input">Google Cloud 저장 제목:</label>
-    <input type="text" id="title-input" value="GPT 분석 결과">
+    <input type="text" id="title-input" value="">
   </div>
 
   <!-- GPT 결과 영역 -->
@@ -516,6 +516,74 @@
 
       if (!prompt) return;
 
+      // 분석 관련 키워드 리스트
+      const analysisKeywords = [
+        "분석", "해석", "진단", "검토", "파악", "분류", "조사", "측정",
+        "평가", "정밀 분석", "구조화", "데이터 분석", "통찰", "요약",
+        "정리", "축약", "개요", "개괄", "발췌", "정돈", "압축", "간추림", "개념화"
+      ];
+
+      // 하나라도 포함되는지 확인
+      const containsKeyword = analysisKeywords.some(keyword => prompt.includes(keyword));
+
+      let format = '출력 형식 지정하지 않음, 자유롭게 출력해.';
+      if(start && end && containsKeyword) {
+        if (start===end) {
+          format = `
+          응답을 다음과 같은 형식으로 부탁해:
+          [ ${start} 의 Health Care 분석]
+
+          1. 이름: (팀원1 이름)
+             - 점수: (팀원1 점수)
+             - 요약된 이유: (팀원1 점수 사유)
+             - 피드백: (팀원1에게 줄 피드백)
+
+          2. 이름: (팀원2 이름)
+             - 점수: (팀원2 점수)
+             - 요약된 이유: (팀원2 점수 사유)
+             - 피드백: (팀원2에게 줄 피드백)
+
+          3. 이름: (팀원3 이름)
+             - 점수: (팀원3 점수 또는 “N/A”)
+             - 요약된 이유: (팀원3 사유 또는 “정보 부족”)
+             - 피드백: (팀원3에게 줄 개선 사항)
+          `;
+        } else {
+          format = `
+          응답을 다음과 같은 형식으로 부탁해:
+          [ ${start}~${end} 의 Health Care 분석]
+
+          [평균 요약]
+          1. 가장 높은 평균 점수를 기록한 날:
+             - 팀 평균 점수: (값)
+             - 이유 요약본: (간단한 이유)
+             - 피드백: (전체 팀에게 줄 피드백)
+
+          2. 가장 낮은 평균 점수를 기록한 날:
+             - 팀 평균 점수: (값)
+             - 이유 요약본: (간단한 이유)
+             - 피드백: (전체 팀에게 줄 피드백)
+
+          [팀원 별 평균 요약]
+          1. 이름: (팀원1 이름)
+             - 점수: (팀원1 점수)
+             - 요약된 이유: (팀원1 점수 사유)
+             - 피드백: (팀원1에게 줄 피드백)
+
+          2. 이름: (팀원2 이름)
+             - 점수: (팀원2 점수)
+             - 요약된 이유: (팀원2 점수 사유)
+             - 피드백: (팀원2에게 줄 피드백)
+
+          3. 이름: (팀원3 이름)
+             - 점수: (팀원3 점수 또는 “N/A”)
+             - 요약된 이유: (팀원3 사유 또는 “정보 부족”)
+             - 피드백: (팀원3에게 줄 개선 사항)
+          \`
+          `;
+        }
+      }
+
       addChatMessage(`(${start} ~ ${end}) ${prompt}`, 'user');
       chatPrompt.value = '';
       chatPrompt.style.height = '24px';
@@ -529,7 +597,7 @@
         const res = await fetch('https://n8n.1000.school/webhook/f69458f2-132a-4617-8fc0-38f7b59a0676', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ start, end, prompt })
+          body: JSON.stringify({ start, end, prompt, format  })
         });
 
         const result = await res.json();
@@ -537,19 +605,19 @@
 
         // 1) 제목: … (한 줄)
         const titleMatch = output.match(/제목\s*:\s*([^\n\r]+)/);
-        const titleText = titleMatch ? titleMatch[1].trim() : '';
+        const titleText =  titleMatch ? titleMatch[1].trim() : '';
 
         // 2) 내용: … (제목 다음 줄부터 끝까지)
         const contentMatch = output.match(/내용\s*:\s*([\s\S]*)/);
         const contentText = contentMatch ? contentMatch[1].trim() : '';
 
         // 3) 각 필드에 할당
-        titleInput.value       = titleText;
+        titleInput.value       = `[${start}~${end}] ${titleText}`;
         resultTextarea.value   = contentText;
         resultTextarea.textContent = contentText;
 
         // GPT 채팅창에도 알림
-        gptMessage.textContent = '분석 완료! \n\n' + contentText;
+        gptMessage.textContent = `분석 완료! "${titleText}"에 대한 답변을 본문에서 확인하세요!`;
 
         saveButton.disabled = !contentText;
 
