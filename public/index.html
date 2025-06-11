@@ -421,12 +421,28 @@
       saveButton.disabled = !hasContent;
     });
 
-    // 오늘 날짜 기본 세팅
-    const today = new Date().toISOString().split('T')[0];
-    chatStart.value = today;
-    chatEnd.value = today;
-    chatStart.setAttribute('max', today);
-    chatEnd.setAttribute('max', today);
+    // 오늘 날짜 구하기
+    const today = new Date();
+
+    // 어제 날짜 구하기
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);  // 오늘 날짜에서 하루 빼기
+
+    // 어제 날짜를 'yyyy-mm-dd' 형식으로 변환
+    const yesterdayFormatted = yesterday.toISOString().split('T')[0];
+
+    // 날짜 필드에 어제 날짜 설정
+    chatStart.value = yesterdayFormatted;
+    chatEnd.value = yesterdayFormatted;
+    chatStart.setAttribute('max', yesterdayFormatted);
+    chatEnd.setAttribute('max', yesterdayFormatted);
+
+
+    // 'start' 날짜가 변경될 때 'end' 날짜의 최소값을 자동으로 업데이트
+    chatStart.addEventListener('change', () => {
+      const startDate = chatStart.value;
+      chatEnd.setAttribute('min', startDate);  // end 날짜의 최소값을 start 날짜로 설정
+    });
 
     // "미지정" 체크박스 → 날짜 필드 비활성화
     noDateCheckbox.addEventListener('change', () => {
